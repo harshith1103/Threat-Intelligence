@@ -1,0 +1,39 @@
+
+class StatefulFirewall:
+    def __init__(self):
+        self.connections = set()
+
+    def outbound(self, source, destination, port):
+        connection = (source, destination, port)
+        self.connections.add(connection)
+
+        print(
+            f"OUTBOUND {source} -> {destination}:{port} ALLOWED"
+        )
+
+    def inbound(self, source, destination, port):
+        # Return traffic reverses the original connection
+        connection = (destination, source, port)
+
+        if connection in self.connections:
+            print(
+                f"INBOUND {source} -> {destination}:{port} ALLOWED"
+                " (Established return traffic)"
+            )
+        else:
+            print(
+                f"INBOUND {source} -> {destination}:{port} BLOCKED"
+                " (Unsolicited traffic)"
+            )
+
+
+firewall = StatefulFirewall()
+
+# Internal computer starts an outbound connection
+firewall.outbound("192.168.1.10", "203.0.113.20", 443)
+
+# Response from the remote server
+firewall.inbound("203.0.113.20", "192.168.1.10", 443)
+
+# An unrelated external host tries to initiate traffic
+firewall.inbound("198.51.100.7", "192.168.1.10", 443)
